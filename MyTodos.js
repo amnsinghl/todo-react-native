@@ -14,12 +14,32 @@ const dikeUrl = "https://proxy.handler.talk.to/go.to/dike/v5.0/getAllAppsV2";
 const baseUrl = "https://apps.flock.co/todo/v2/";
 
 class TodoItem extends Component {
+
+    //TODO: not working
+    async markTodo() {
+        const token = await AsyncStorage.getItem("todoToken");
+        let url = baseUrl + "chat/" + this.props.chatId + "/list/" + this.props.listId + "/todo/" + this.props.state.todoId;
+        if (this.props.checked) {
+            url += "/open";
+        } else {
+            url += "/complete";
+        }
+        url += "?" + token;
+        console.log(url);
+        const response = (await fetch(url, {method: 'POST'}));
+        console.log(response);
+        if (response.ok) {
+            this.prop.checked = !this.prop.checked;
+            this.setState();
+        }
+    }
+
     render() {
         return (
             <View style={{padding: 10}}>
                 <CheckBox
                     style={{flex: 1}}
-                    onClick={() => this.onClick(data)}
+                    onClick={this.markTodo.bind(this)}
                     isChecked={this.props.checked}
                     rightText={this.props.state.text}
                 />
@@ -37,7 +57,6 @@ class TodoList extends Component {
 
     constructor(props) {
         super(props);
-        this.props = props;
     }
 
     async fetchCompletedTodos() {
@@ -52,12 +71,8 @@ class TodoList extends Component {
     render() {
         return (
             <View style={{
-                backgroundColor: 'white',
-                marginLeft: 10,
-                marginRight: 10,
-                marginTop: 5,
-                marginBottom: 5,
-                padding: 10
+                backgroundColor: 'white', marginLeft: 10, marginRight: 10, marginTop: 5,
+                marginBottom: 5, padding: 10
             }}>
                 <Text style={{fontSize: 20, fontWeight: 'bold'}}>{this.props.state.listName}</Text>
                 <View style={{flexDirection: 'row'}}>
@@ -67,7 +82,8 @@ class TodoList extends Component {
                 <FlatList
                     data={this.props.state.todos}
                     renderItem={({item}) =>
-                        <TodoItem state={item} checked={false}/>
+                        <TodoItem state={item} checked={false} listId={this.props.state.listId}
+                                  chatId={this.props.state.chatId}/>
                     }
                     keyExtractor={item => item.todoId}
                 />
@@ -81,7 +97,7 @@ class TodoList extends Component {
                 <View
                     style={{flexDirection: 'row', justifyContent: 'space-between', marginTop: 10}}>
                     <Button title="Add a to-do"
-                            color="#00c955" onPress={() => navigate('MyTodos')}/>
+                            color="#00c955" onPress={() => this.props.navigate('CreateTodo')}/>
                     <Button title="Show Completed"
                             color="#00c955" onPress={this.fetchCompletedTodos.bind(this)}/>
                 </View>
@@ -160,6 +176,7 @@ export default class MyTodos extends Component {
 
 
     render() {
+        const {navigate} = this.props.navigation;
         if (this.state.isLoading) {
             return (
                 <View style={{flex: 1, paddingTop: 20}}>
@@ -173,7 +190,7 @@ export default class MyTodos extends Component {
                 <ListView
                     dataSource={this.state.dataSource}
                     renderRow={(rowData) =>
-                        <TodoList state={rowData}/>
+                        <TodoList state={rowData} navigate={navigate}/>
                     }
                 />
             </View>
