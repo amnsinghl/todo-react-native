@@ -1,29 +1,30 @@
 import React, {Component} from 'react';
 import {
     ActivityIndicator,
-    Platform,
-    StyleSheet,
-    Text,
-    View,
+    AsyncStorage,
+    Button,
+    FlatList,
     ListView,
-    Image, Button, FlatList
+    Text,
+    View
 } from 'react-native';
 import CheckBox from "react-native-check-box";
 
+const dikeUrl = "https://proxy.handler.talk.to/go.to/dike/v5.0/getAllAppsV2";
 const baseUrl = "https://apps.flock.co/todo/v2/";
-const token = "flockEvent=%7B%22name%22%3A%22client.pressButton%22%2C%22button%22%3A%22appLauncherButton%22%2C%22chatName%22%3A%22Aman%20Singhal%22%2C%22chat%22%3A%22u%3A10104fr1oryrf0r0%22%2C%22userName%22%3A%22Aman%20Singhal%22%2C%22locale%22%3A%22en-us%22%2C%22userId%22%3A%22u%3Aisgpwwyralhf9aso%22%7D&flockEventToken=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhcHBJZCI6IjZkMGFhMzdiMDA5NDRlYzBhNzQyNmQzNGNhMmRmMDQ4IiwidXNlcklkIjoidTppc2dwd3d5cmFsaGY5YXNvIiwiZXhwIjoxNTEyOTY4OTA3LCJpYXQiOjE1MTIzNjQxMDcsImp0aSI6IjcwNjA5YmU2LWYzMzQtNGIzMS04Zjg1LWFjMzkwYTUyN2I2NiJ9.JCEurA8H_Uik3BN1ck4jp2gtAgYBIhP3KP-sbh4UK6I";
 
 class TodoItem extends Component {
     render() {
         return (
-            <View style={{padding:10}}>
+            <View style={{padding: 10}}>
                 <CheckBox
                     style={{flex: 1}}
                     onClick={() => this.onClick(data)}
                     isChecked={false}
                     rightText={this.props.state.text}
                 />
-                <View style={{flexDirection: 'row', justifyContent: 'space-between', marginLeft:33}}>
+                <View
+                    style={{flexDirection: 'row', justifyContent: 'space-between', marginLeft: 33}}>
                     <Text>{this.props.state.assignedToName}</Text>
                     <Text>{this.props.state.dueOn}</Text>
                 </View>
@@ -35,11 +36,18 @@ class TodoItem extends Component {
 class TodoList extends Component {
     render() {
         return (
-            <View style={{backgroundColor: 'white', margin: 10, padding: 10}}>
+            <View style={{
+                backgroundColor: 'white',
+                marginLeft: 10,
+                marginRight: 10,
+                marginTop: 5,
+                marginBottom: 5,
+                padding: 10
+            }}>
                 <Text style={{fontSize: 20, fontWeight: 'bold'}}>{this.props.state.listName}</Text>
                 <View style={{flexDirection: 'row'}}>
                     <Text>in </Text>
-                    <Text style={{color: '#00c955'}}>{this.props.state.chat.chatName}</Text>
+                    <Text style={{color: '#00c955'}}>{this.props.state.chatName}</Text>
                 </View>
                 <FlatList
                     data={this.props.state.todos}
@@ -62,6 +70,10 @@ class TodoList extends Component {
 
 export default class MyTodos extends Component {
 
+    static navigationOptions = {
+        title: 'My To-Dos'
+    };
+
     constructor() {
         super();
         this.state = {
@@ -75,17 +87,23 @@ export default class MyTodos extends Component {
             let chatDetails = responseJson.roster.find((it) => it.chatId === chat.chatId);
             for (let li in chat.lists) {
                 let todo = chat.lists[li];
-                todo.chat = chatDetails;
+                if (chatDetails) {
+                    todo.chatName = chatDetails.chatName;
+                } else {
+                    todo.chatName = "";
+                }
                 ret.push(todo);
             }
         });
         return ret;
     }
 
-    componentDidMount() {
-        return fetch(baseUrl + 'chat?' + token)
+    fetchTodos(todoToken) {
+        const url = baseUrl + 'chat?' + todoToken;
+        return fetch(url)
             .then((response) => response.json())
             .then((responseJson) => {
+                console.log(responseJson);
                 let ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
                 this.setState({
                     isLoading: false,
@@ -97,6 +115,24 @@ export default class MyTodos extends Component {
             .catch((error) => {
                 console.error(error);
             });
+    }
+
+    async componentDidMount() {
+        const todoToken = await AsyncStorage.getItem("todoToken");
+        if (todoToken) {
+            this.fetchTodos(todoToken);
+        } else {
+            const guid = await AsyncStorage.getItem("guid");
+            const token = await AsyncStorage.getItem("token");
+            const url = dikeUrl + "?guid=" + guid + "&token=" + token;
+            const response = await (await fetch(url)).json();
+            const todoApp = response.apps.filter((it) => it.id === "6d0aa37b00944ec0a7426d34ca2df048")[0];
+            await AsyncStorage.setItem("eventToken", todoApp.eventToken);
+            await AsyncStorage.setItem("validationToken", todoApp.validationToken);
+            const todoToken = "flockEvent=a&flockEventToken=" + todoApp.eventToken;
+            await AsyncStorage.setItem("todoToken", todoToken);
+            this.fetchTodos(todoToken);
+        }
     }
 
 
