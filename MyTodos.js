@@ -8,6 +8,7 @@ import {
     ListView,
     Image, Button, FlatList
 } from 'react-native';
+import CheckBox from "react-native-check-box";
 
 const baseUrl = "https://apps.flock.co/todo/v2/";
 const token = "flockEvent=%7B%22name%22%3A%22client.pressButton%22%2C%22button%22%3A%22appLauncherButton%22%2C%22chatName%22%3A%22Aman%20Singhal%22%2C%22chat%22%3A%22u%3A10104fr1oryrf0r0%22%2C%22userName%22%3A%22Aman%20Singhal%22%2C%22locale%22%3A%22en-us%22%2C%22userId%22%3A%22u%3Aisgpwwyralhf9aso%22%7D&flockEventToken=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhcHBJZCI6IjZkMGFhMzdiMDA5NDRlYzBhNzQyNmQzNGNhMmRmMDQ4IiwidXNlcklkIjoidTppc2dwd3d5cmFsaGY5YXNvIiwiZXhwIjoxNTEyOTY4OTA3LCJpYXQiOjE1MTIzNjQxMDcsImp0aSI6IjcwNjA5YmU2LWYzMzQtNGIzMS04Zjg1LWFjMzkwYTUyN2I2NiJ9.JCEurA8H_Uik3BN1ck4jp2gtAgYBIhP3KP-sbh4UK6I";
@@ -16,7 +17,12 @@ class TodoItem extends Component {
     render() {
         return (
             <View>
-                <Text>{this.props.state.text}</Text>
+                <CheckBox
+                    style={{flex: 1, padding: 10}}
+                    onClick={() => this.onClick(data)}
+                    isChecked={false}
+                    rightText={this.props.state.text}
+                />
                 <Text>{this.props.state.dueOn}</Text>
                 <Text>{this.props.state.assignedToName}</Text>
             </View>
@@ -28,7 +34,11 @@ class TodoList extends Component {
     render() {
         return (
             <View>
-                <Text >{this.props.state.listName}</Text>
+                <Text>{this.props.state.listName}</Text>
+                <View >
+                    <Text>in</Text>
+                    <Text>{this.props.state.chat.chatName}</Text>
+                </View>
                 <FlatList
                     data={this.props.state.todos}
                     renderItem={({item}) =>
@@ -36,6 +46,7 @@ class TodoList extends Component {
                     }
                     keyExtractor={item => item.todoId}
                 />
+                <Button title="Add a to-do" color="#00c955" onPress={() => navigate('MyTodos')}/>
             </View>
         );
     }
@@ -53,8 +64,10 @@ export default class MyTodos extends Component {
     convertList(responseJson) {
         let ret = [];
         responseJson.chats.forEach((chat) => {
+            let chatDetails = responseJson.roster.find((it) => it.chatId === chat.chatId);
             for (let li in chat.lists) {
                 let todo = chat.lists[li];
+                todo.chat = chatDetails;
                 ret.push(todo);
             }
         });
