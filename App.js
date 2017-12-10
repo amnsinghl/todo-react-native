@@ -4,21 +4,21 @@
  * @flow
  */
 
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import {
     ActivityIndicator,
-    FlatList,
     Platform,
     StyleSheet,
     Text,
     View,
-    ListView
+    ListView,
+    Image
 } from 'react-native';
 
 const instructions = Platform.select({
-  ios: 'Press Cmd+R to reload,\n' +
+    ios: 'Press Cmd+R to reload,\n' +
     'Cmd+D or shake for dev menu',
-  android: 'Double tap R on to reload,\n' +
+    android: 'Double tap R on to reload,\n' +
     'Shake or press menu button for dev menu',
 });
 const baseUrl = "https://apps.flock.co/todo/v2/";
@@ -34,14 +34,14 @@ export default class App extends Component {
     }
 
     componentDidMount() {
-        return fetch('https://facebook.github.io/react-native/movies.json')
+        return fetch(baseUrl + 'roster?' + token)
             .then((response) => response.json())
             .then((responseJson) => {
                 let ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
                 this.setState({
                     isLoading: false,
-                    dataSource: ds.cloneWithRows(responseJson.movies),
-                }, function() {
+                    dataSource: ds.cloneWithRows(responseJson.sort((a,b)=> a.chatName < b.chatName)),
+                }, function () {
                     // do something with new state
                 });
             })
@@ -63,7 +63,13 @@ export default class App extends Component {
             <View style={{flex: 1, paddingTop: 20}}>
                 <ListView
                     dataSource={this.state.dataSource}
-                    renderRow={(rowData) => <Text>{rowData.title}, {rowData.releaseYear}</Text>}
+                    renderRow={(rowData) =>
+                        <View style={{flex:1, flexDirection:'row', height: 50}}>
+                            <Image source={{uri: rowData.chatProfileImage}}
+                                   style={{width: 50, height: 50}}/>
+                            <Text style={{alignSelf: 'center', fontSize:20, textAlign:'center'}}>{rowData.chatName}</Text>
+                        </View>
+                    }
                 />
             </View>
         );
@@ -71,20 +77,20 @@ export default class App extends Component {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
-  },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#F5FCFF',
+    },
+    welcome: {
+        fontSize: 20,
+        textAlign: 'center',
+        margin: 10,
+    },
+    instructions: {
+        textAlign: 'center',
+        color: '#333333',
+        marginBottom: 5,
+    },
 });
