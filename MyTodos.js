@@ -16,15 +16,17 @@ const token = "flockEvent=%7B%22name%22%3A%22client.pressButton%22%2C%22button%2
 class TodoItem extends Component {
     render() {
         return (
-            <View>
+            <View style={{padding:10}}>
                 <CheckBox
-                    style={{flex: 1, padding: 10}}
+                    style={{flex: 1}}
                     onClick={() => this.onClick(data)}
                     isChecked={false}
                     rightText={this.props.state.text}
                 />
-                <Text>{this.props.state.dueOn}</Text>
-                <Text>{this.props.state.assignedToName}</Text>
+                <View style={{flexDirection: 'row', justifyContent: 'space-between', marginLeft:33}}>
+                    <Text>{this.props.state.assignedToName}</Text>
+                    <Text>{this.props.state.dueOn}</Text>
+                </View>
             </View>
         )
     }
@@ -33,11 +35,11 @@ class TodoItem extends Component {
 class TodoList extends Component {
     render() {
         return (
-            <View>
-                <Text>{this.props.state.listName}</Text>
-                <View >
-                    <Text>in</Text>
-                    <Text>{this.props.state.chat.chatName}</Text>
+            <View style={{backgroundColor: 'white', margin: 10, padding: 10}}>
+                <Text style={{fontSize: 20, fontWeight: 'bold'}}>{this.props.state.listName}</Text>
+                <View style={{flexDirection: 'row'}}>
+                    <Text>in </Text>
+                    <Text style={{color: '#00c955'}}>{this.props.state.chat.chatName}</Text>
                 </View>
                 <FlatList
                     data={this.props.state.todos}
@@ -46,7 +48,13 @@ class TodoList extends Component {
                     }
                     keyExtractor={item => item.todoId}
                 />
-                <Button title="Add a to-do" color="#00c955" onPress={() => navigate('MyTodos')}/>
+                <View
+                    style={{flexDirection: 'row', justifyContent: 'space-between', marginTop: 10}}>
+                    <Button title="Add a to-do"
+                            color="#00c955" onPress={() => navigate('MyTodos')}/>
+                    <Button title="Show Completed"
+                            color="#00c955" onPress={() => navigate('MyTodos')}/>
+                </View>
             </View>
         );
     }
