@@ -20,7 +20,7 @@ class TodoItem extends Component {
                 <CheckBox
                     style={{flex: 1}}
                     onClick={() => this.onClick(data)}
-                    isChecked={false}
+                    isChecked={this.props.checked}
                     rightText={this.props.state.text}
                 />
                 <View
@@ -34,6 +34,21 @@ class TodoItem extends Component {
 }
 
 class TodoList extends Component {
+
+    constructor(props) {
+        super(props);
+        this.props = props;
+    }
+
+    async fetchCompletedTodos() {
+        const token = await AsyncStorage.getItem("todoToken");
+        const url = baseUrl + "chat/" + this.props.state.chatId + "/list/" + this.props.state.listId + "/completedtodos?" + token;
+        console.log(url);
+        const response = await ((await fetch(url)).json());
+        this.props.state.completedTodos = response[this.props.state.listId].todos;
+        this.setState({});
+    }
+
     render() {
         return (
             <View style={{
@@ -52,7 +67,14 @@ class TodoList extends Component {
                 <FlatList
                     data={this.props.state.todos}
                     renderItem={({item}) =>
-                        <TodoItem state={item}/>
+                        <TodoItem state={item} checked={false}/>
+                    }
+                    keyExtractor={item => item.todoId}
+                />
+                <FlatList
+                    data={this.props.state.completedTodos}
+                    renderItem={({item}) =>
+                        <TodoItem state={item} checked={true}/>
                     }
                     keyExtractor={item => item.todoId}
                 />
@@ -61,7 +83,7 @@ class TodoList extends Component {
                     <Button title="Add a to-do"
                             color="#00c955" onPress={() => navigate('MyTodos')}/>
                     <Button title="Show Completed"
-                            color="#00c955" onPress={() => navigate('MyTodos')}/>
+                            color="#00c955" onPress={this.fetchCompletedTodos.bind(this)}/>
                 </View>
             </View>
         );
@@ -92,6 +114,7 @@ export default class MyTodos extends Component {
                 } else {
                     todo.chatName = "";
                 }
+                todo.chatId = chat.chatId;
                 ret.push(todo);
             }
         });
